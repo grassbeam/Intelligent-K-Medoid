@@ -18,86 +18,101 @@
             $centro = null;
             $means = null;
             $totmean = null;
+            $objekintel = array();
+            $objekmedoid = array();
             if (($handle = fopen($_FILES['file']['tmp_name'], 'r')) !== FALSE) {
                 $arr = array(array());
                 $centro = array(array());
                 $means = array();
+                $grandmed = array();
                 $totmean = array(0, 0, 0, 0, 0, 0, 0, 0,);
                 $ct = 0 ;
+                $temparrmed = array(array());
                 while(($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                     $num = count($data);
                     for ($i=0; $i<$num; $i++){
-                        $tmpsetan = $totmean[$i];
-                        $totmean[$i] = $totmean[$i] + $data[$i];
+                        // $tmpsetan = $totmean[$i];
+                        // $totmean[$i] = $totmean[$i] + $data[$i];
                         // echo "<script>console.log('" . $totmean[$i] . " = " . $tmpsetan . "+" . $data[$i] . "')</script>";
+                        $temparrmed[$i][] = $data[$i];
                     }
                     $arr[$ct] = $data;
                     $ct++;
                 }
-                // echo "<script>console.log('jumdat = " . $ct . "')</script>";
-                for($i=0; $i<count($arr[0]); $i++){
-                    $means[$i] = $totmean[$i] / ($ct);
-
-                }
-
-                /////////////////////////////Perhitungan Center of Mass/////////////////////////////
-                // var_dump($means);
-                $tmpidxcentro = array();
-                $tmpdat = null;
-                $tmpdist = 0.0;
-                // var_dump($arr[0][1]);
-                for ($i=0; $i<$jumlahcluster; $i++) {
-                    $tmpdist = 0.0;
-                    for ($j=0; $j<$ct; $j++){
-                        $tmparrsel = 0.0;
-                        // var_dump($tmparrsel);
-                        $tmpdat = $arr[$j];
-                        if ($i<1) {
-
-                            for ($k=0; $k<count($tmpdat); $k++){
-                                $seli = floatval($means[$k]) - (float)($tmpdat[$k]);
-                                $tmpflot = pow($seli, 2);
-                                $tmparrsel = $tmparrsel + $tmpflot;
-                                
-                            }
-                            // var_dump($tmparrsel);
-                            // echo "tmparrsel " . $j . " = " . $tmparrsel;
-                            $dist = sqrt($tmparrsel);
-                            // echo "distance " . $j . " = " . $dist;
-                            if($tmpdist < $dist){
-                                $tmpidxcentro[$i] = $j;
-                                $tmpdist = $dist;
-                            }
-                        } else {
-                            $tmpcentrosblm = $arr[$tmpidxcentro[$i-1]];
-                            for ($k=0; $k<count($arr[$j]); $k++){
-                                $seli = (float)($tmpcentrosblm[$k]) - (float)($tmpdat[$k]);
-                                $tmparrsel = $tmparrsel + pow($seli, 2);
-                            }
-                            $dist = sqrt($tmparrsel);
-                            if($tmpdist < $dist){
-                                $tmpidxcentro[$i] = $j;
-                                $tmpdist = $dist;
-                            }
-                        }
-                    }
-                    // echo "Cluster-" . ($i+1) . " indeks = " . $tmpidxcentro[$i]; 
-
-                }
-                /////////////////////////////END of Perhitungan Center of Mass/////////////////////////////
-
-
-                //assign counted centroid to array
+                // var_dump(count($arr));
                 
-                for($i=0; $i<$jumlahcluster; $i++) {
+                // var_dump($temparr[0]);
+                // echo "<script>console.log('jumdat = " . $ct . "')</script>";
+                // for($i=0; $i<count($arr[0]); $i++){
+                //     $means[$i] = $totmean[$i] / ($ct);
 
-                    if($jumlahcluster < 3){
-                        $centro[$i] = $arr[$tmpidxcentro[$i]];    
+                // }
+                $tmpmed = array();
+                for($i = 0; $i< count($arr[0]); $i++){
+                    sort($temparrmed[$i]);
+                    if (((count($temparrmed[$i]))%2)==0){
+                      $tmp = (($temparrmed[$i][(count($temparrmed[$i]))/2])+($temparrmed[$i][((count($temparrmed[$i]))/2)-1]))/2;
                     } else {
-                        $centro[$i] = $arr[rand(0,$ct)];
+                      $tmp = ($temparrmed[$i][ceil(((count($temparrmed[$i]))/2)-1)]);
                     }
-                    
+                    $tmpmed[$i] = $tmp;
                 }
+
+
+                $grandmed = $tmpmed;
+                /// /// ///FINDING 2 STARTER CENTROID /// /// ///
+                /// Finding C1 ///
+                $distance = 0;
+                $idxc = null;
+                for($i = 0; $i< count($arr); $i++){
+                    $tmp = 0;
+                    for($j=0; $j< count($arr[$i]); $j++) {
+                        $tmp += pow(($grandmed[$j] - $arr[$i][$j]), 2);
+                    }
+                    $tmp = sqrt($tmp);
+                    if($tmp > $distance) {
+                        $idxc = $i;
+                        $distance = $tmp;
+                    } 
+                }
+                if ($idxc !== null) {
+                    $centro[0] = $arr[$idxc];
+                } else {
+                    $centro[0] = $arr[0];
+                }
+                /// END OF Finding C1 ///
+                /// /// Finding C2 /// ///
+                $distance = 0;
+                $idxc = null;
+                for($i = 0; $i< count($arr); $i++){
+                    $tmp = 0;
+                    /// Eucledian Distance
+                    for($j=0; $j< count($arr[$i]); $j++) {
+                        $tmp += pow(($centro[0][$j] - $arr[$i][$j]), 2);
+                    }
+                    $tmp = sqrt($tmp);
+                    /// END OF Eucledian Distance
+                    if($tmp > $distance) {
+                        $idxc = $i;
+                        $distance = $tmp;
+                    } 
+                }
+                if ($idxc !== null) {
+                    $centro[1] = $arr[$idxc];
+                } else {
+                    $centro[1] = $arr[0];
+                }
+                /// /// END OF Finding C2 /// ///
+                // var_dump($centro[0]);
+                // echo "<br/>";
+                // var_dump($centro[1]);
+                /// /// ///END of FINDING 2 STARTER CENTROID /// /// ///
+                /// /// ///CLUSTERING INTELLIGENT STARTED /// /// ///
+                $countiter = 0;
+                $ketemu = false;
+
+                
+                /// /// ///END of CLUSTERING INTELLIGENT /// /// ///
 
 
             } else{
@@ -108,40 +123,40 @@
              die("<h2>No file selected<h2/>");
      }
 
-     if ( isset($_FILES["fileraw"])) {
+     // if ( isset($_FILES["fileraw"])) {
         
-            //if there was an error uploading the file
-        if ($_FILES["fileraw"]["error"] > 0) {
-            echo "Return Code: " . $_FILES["fileraw"]["error"] . "<br />";
+     //        //if there was an error uploading the file
+     //    if ($_FILES["fileraw"]["error"] > 0) {
+     //        echo "Return Code: " . $_FILES["fileraw"]["error"] . "<br />";
 
-        }
-        else {
-            $aerr = null;
-            if (($handle = fopen($_FILES['fileraw']['tmp_name'], 'r')) !== FALSE) {
-                $aerr = array(array());
-                $cter = 0 ;
-                while(($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    $num = count($data);
-                    $aerr[$cter] = $data;
-                    $cter++;
-                }
+     //    }
+     //    else {
+     //        $aerr = null;
+     //        if (($handle = fopen($_FILES['fileraw']['tmp_name'], 'r')) !== FALSE) {
+     //            $aerr = array(array());
+     //            $cter = 0 ;
+     //            while(($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+     //                $num = count($data);
+     //                $aerr[$cter] = $data;
+     //                $cter++;
+     //            }
 
 
-            } else{
-                die('<h2>Error file RAW...</h2>');
-            }
-        }
-     } else {
-             die("<h2>No file RAW selected<h2/>");
-     }
+     //        } else{
+     //            die('<h2>Error file RAW...</h2>');
+     //        }
+     //    }
+     // } else {
+     //         die("<h2>No file RAW selected<h2/>");
+     // }
 
 
      if($arr == null || $centro == null) {
         die("<h2>Array not created</h2>");
      }
-     if($aerr == null) {
-        die('<h2>Array RAW not created</h2>');
-     }
+     // if($aerr == null) {
+     //    die('<h2>Array RAW not created</h2>');
+     // }
 ?>
 
 <!DOCTYPE html>
@@ -178,8 +193,67 @@
     <?php
         echo "<div style='padding-left:50px;width:500px;float:left;'>
             <div style='width:500px;text-align:center;padding-bottom:30px;'>K- MEDOID</div>";
-      $clustering = new ClusteringKMenoid($arr, $centro, $aerr);
-      $clustering->setClusterObjek(1);
+      $objektampung = array();
+      //di bikin stabil//
+      $clustering = new ClusteringKMedoid($arr, $centro);
+      $objektampung = $clustering->setClusterObjek(1);
+      $centro = $clustering->getCentroClust();
+      //di bikin stabil end//
+      for ($i=0;$i<count($arr);$i++){
+        $objekintel[$i] = new objek($arr[$i]);
+        $objekintel[$i]->setCluster($centro);
+      }
+      $ketemu = false;
+      while(!$ketemu && $countiter <= 10){
+        $tmpdist = array();
+        $tmpdistidx = array();
+        for($i=0;$i<count($arr);$i++) {
+            $clst = $objekintel[$i]->getCluster();
+            if(!isset($tmpdist[$clst])) {
+                $tmpdist[$clst] = $objekintel[$i]->getDistance($clst);
+                $tmpdistidx[$clst] = $i;
+            } else {
+                if($tmpdist[$clst] < $objekintel[$i]->getDistance($clst)) {
+                    $tmpdist[$clst] = $objekintel[$i]->getDistance($clst);
+                    $tmpdistidx[$clst] = $i;
+                }
+            }
+        }
+        $tmp = 0;
+        $tmpidx=0;
+        foreach ($tmpdistidx as $key) {
+            if($tmp < $objekintel[$key]->getMeanDistance()){
+                $tmp = $objekintel[$key]->getMeanDistance();
+                $tmpidx = $key;
+            }
+        }
+        $idxnewcentro = count($centro);
+        echo '$tmpidx=' . $tmpidx . "<br/>";
+        $centro[$idxnewcentro] = $arr[$tmpidx];
+        echo 'centroid baru = ';
+        var_dump($centro[$idxnewcentro]);
+        echo '<br/>';
+            for ($i=0;$i<count($arr);$i++){
+                // $objekintel[$i] = new objek($arr[$i]);
+                $objekintel[$i]->setCluster($centro);
+            }
+            $clustering = new ClusteringKMedoid($arr, $centro);
+            $objektampung = $clustering->setClusterObjek(1);
+            // var_dump($objektampung);
+            //check kesamaan cluster//
+            $ketemu = TRUE;
+            for($i=0;$i<count($objekintel);$i++) {
+                if($objekintel[$i]->getCluster() != $objektampung[$i]->getCluster()){
+                    $ketemu = FALSE;
+                    break;
+                }
+            }
+            //end check kesamaan cluster//
+            $countiter++;
+            
+      }
+
+      
       echo "</div>";
       // if(isset($_SESSION['objekan']) && isset($_SESSION['centroclus'])) {
       //   echo "<script>alert('dapet sesinya kok')</script>";
