@@ -6,8 +6,8 @@
 	if(!$_POST['cluster']) {die('<h1>Asem...</h1>');}
 
 	if ( isset($_FILES["file"])) {
-        $jumlahcluster = $_POST['jumclus'];
-        $_SESSION['jumclus'] = $jumlahcluster;
+        // $jumlahcluster = $_POST['jumclus'];
+        // $_SESSION['jumclus'] = $jumlahcluster;
             //if there was an error uploading the file
         if ($_FILES["file"]["error"] > 0) {
             echo "Return Code: " . $_FILES["file"]["error"] . "<br />";
@@ -204,7 +204,12 @@
         $objekintel[$i]->setCluster($centro);
       }
       $ketemu = false;
-      while(!$ketemu && $countiter <= 10){
+      $potong = false;
+      $potongidx = NULL;
+
+      ///CLUSTERING INTELLIGENT START///
+      
+    while(!$ketemu && $countiter <= 10){
         $tmpdist = array();
         $tmpdistidx = array();
         for($i=0;$i<count($arr);$i++) {
@@ -233,25 +238,88 @@
         echo 'centroid baru = ';
         var_dump($centro[$idxnewcentro]);
         echo '<br/>';
-            for ($i=0;$i<count($arr);$i++){
-                // $objekintel[$i] = new objek($arr[$i]);
-                $objekintel[$i]->setCluster($centro);
+        for ($i=0;$i<count($arr);$i++){
+            // $objekintel[$i] = new objek($arr[$i]);
+            $objekintel[$i]->setCluster($centro);
+        }
+        $clustering = new ClusteringKMedoid($arr, $centro);
+        $objektampung = $clustering->setClusterObjek(1);
+        // var_dump($objektampung);
+        //check kesamaan cluster//
+        $ketemu = TRUE;
+        $countclustarr = array();
+        for($i=0;$i<count($objekintel);$i++) {
+           if($objekintel[$i]->getCluster() != $objektampung[$i]->getCluster()){
+                $ketemu = FALSE;
+                break;
             }
-            $clustering = new ClusteringKMedoid($arr, $centro);
-            $objektampung = $clustering->setClusterObjek(1);
-            // var_dump($objektampung);
-            //check kesamaan cluster//
-            $ketemu = TRUE;
-            for($i=0;$i<count($objekintel);$i++) {
-                if($objekintel[$i]->getCluster() != $objektampung[$i]->getCluster()){
-                    $ketemu = FALSE;
-                    break;
+            $clustemp = $objekintel[$i]->getCluster();
+            if(isset($countclustarr[$clustemp])) {
+                $countclustarr[$clustemp] += 1;
+            } else {
+                $countclustarr[$clustemp] = 1;
+            }
+        }
+
+        for($zz=0 ;$zz < count($countclustarr); $zz++){
+            echo "Cluster " . ($zz+1) . " = " . $countclustarr[$zz] . " <br/>"; 
+            if($countclustarr[$zz] < 2){
+                $potong = true;
+                $potongidx = $zz;
+                $ketemu = TRUE;
+                break;
+            }
+        }
+        //end check kesamaan cluster//
+        $countiter++;   
+    }
+
+    if($potong){
+        echo "<h3>KEPOTONG</h3><br/>";
+        $newcentros = array(array());
+        $count = 0;
+        for($i=0; $i<count($centro); $i++){
+            if($i != $potongidx){
+                $newcentros[$count] = $centro[$i];
+                $count++;
+            }
+        }
+    }
+    $centro = $newcentros;
+
+      echo "<table width='500' cellpadding=0 cellspacing=0>
+                        <tr><th colspan='100'>ITERASI ".$countiter."</th></tr>
+            <tr><th>Objek</th>";
+            for ($i=0;$i<count($objekintel[0]->data);$i++){
+                  echo "<th>Data ".($i+1)."</th>";
+            }            
+            for ($j=0;$j<count($centro);$j++){
+                  echo "<th>Cluster ".($j+1)."</th>";
+            }            
+            echo "</tr>";          
+            for ($i=0;$i<count($objekintel);$i++){
+                  $objekintel[$i]->setCluster($centro);
+          echo "<tr><td>Objek ".($i+1)."</td>";                  
+                  for ($j=0;$j<count($objekintel[$i]->data);$j++)
+                        echo "<td>".$objekintel[$i]->data[$j]."</td>";
+                  
+                  for ($j=0;$j<count($centro);$j++){
+                        if ($j == $objekintel[$i]->getCluster())
+                              echo "<td>X</td>";
+                        else  echo "<td>&nbsp;</td>";
+                  }                  
+                  echo "</tr>";
+            }
+            echo "</table><br><br>";
+                for ($i=0;$i<count($centro);$i++){
+                    echo "Cluster ".($i+1)." -> ";
+                    for ($j=0;$j<count($centro[$i]);$j++){
+                        echo $centro[$i][$j]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+                    }
+                    echo "<br>";
                 }
-            }
-            //end check kesamaan cluster//
-            $countiter++;
-            
-      }
+
+
 
       
       echo "</div>";

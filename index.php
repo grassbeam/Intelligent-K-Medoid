@@ -16,9 +16,6 @@
 		<label for="file">Pilih File</label>
 		<input type="file" name="file" id="file" accept=".csv" />
 		<br>
-		<label for="jumclus">Jumlah Cluster</label>
-		<input type="number" name="jumclus" id="jumclus" min="1">
-		<br>
 		<br>
 		<input type="submit" name="cluster" id="cluster" value="cluster">
 	</form>
