@@ -50,15 +50,16 @@ class ClusteringKMedoid {
                         break;
                   }
             }            
-           if ((!($cek))&&($itr<20)){
+           if ((!($cek))&&($itr<100)){
                   for ($i=0;$i<count($this->cekObjCluster);$i++){
                         $this->cekObjCluster[$i] = $this->objek[$i]->getCluster();
                   }
                   $this->setCentroidCluster();
                   return $this->setClusterObjek($itr+1);
             }else{
+              echo "<div style='width:500px;float:left;clear:left;'>";
               echo "<table width='500' cellpadding=0 cellspacing=0>
-                        <tr><th colspan='100'>ITERASI ".$itr."</th></tr>
+                        <tr><th colspan='100'>ITERASI k-Medoid ".$itr."</th></tr>
             <tr><th>Objek</th>";            
             for ($i=0;$i<count($this->objek[0]->data);$i++){
                   echo "<th>Data ".($i+1)."</th>";
@@ -81,6 +82,7 @@ class ClusteringKMedoid {
                   echo "</tr>";
             }
             echo "</table><br><br>";
+
 				for ($i=0;$i<count($this->centroidCluster);$i++){
 					echo "Cluster ".($i+1)." -> ";
 					for ($j=0;$j<count($this->centroidCluster[$i]);$j++){
@@ -88,6 +90,7 @@ class ClusteringKMedoid {
 					}
 					echo "<br>";
 				}
+        echo "</div>";
         $_SESSION['objekan'] = $this->objek;
         $_SESSION['centroclus'] = $this->centroidCluster;   
         // $_SESSION['objekraw'] = $this->objekraw;

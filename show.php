@@ -191,13 +191,15 @@
 </head>
 <body>
     <?php
-        echo "<div style='padding-left:50px;width:500px;float:left;'>
-            <div style='width:500px;text-align:center;padding-bottom:30px;'>K- MEDOID</div>";
+        echo "<div style='width:500px;text-align:center;padding-bottom:30px;'>K- MEDOID</div>";
       $objektampung = array();
       //di bikin stabil//
       $clustering = new ClusteringKMedoid($arr, $centro);
       $objektampung = $clustering->setClusterObjek(1);
       $centro = $clustering->getCentroClust();
+
+    echo "<div style='padding-left:50px;width:500px;float:left;'>  ";
+    echo "</div>";
       //di bikin stabil end//
       for ($i=0;$i<count($arr);$i++){
         $objekintel[$i] = new objek($arr[$i]);
@@ -233,11 +235,11 @@
             }
         }
         $idxnewcentro = count($centro);
-        echo '$tmpidx=' . $tmpidx . "<br/>";
+        // echo '$tmpidx=' . $tmpidx . "<br/>";
         $centro[$idxnewcentro] = $arr[$tmpidx];
-        echo 'centroid baru = ';
-        var_dump($centro[$idxnewcentro]);
-        echo '<br/>';
+        // echo 'centroid baru = ';
+        // var_dump($centro[$idxnewcentro]);
+        // echo '<br/>';
         for ($i=0;$i<count($arr);$i++){
             // $objekintel[$i] = new objek($arr[$i]);
             $objekintel[$i]->setCluster($centro);
@@ -245,14 +247,46 @@
         $clustering = new ClusteringKMedoid($arr, $centro);
         $objektampung = $clustering->setClusterObjek(1);
         // var_dump($objektampung);
+        echo "<div style='padding-left:50px;width:500px;float:left;'>";
+        echo "<table width='500' cellpadding=0 cellspacing=0>
+                        <tr><th colspan='100'>ITERASI INTELLIGENT ke-".($countiter+1)."</th></tr>
+            <tr><th>Objek</th>";            
+            for ($i=0;$i<count($objekintel[0]->data);$i++){
+                  echo "<th>Data ".($i+1)."</th>";
+            }            
+            for ($j=0;$j<count($centro);$j++){
+                  echo "<th>Cluster ".($j+1)."</th>";
+            }            
+            echo "</tr>";          
+            for ($i=0;$i<count($objekintel);$i++){
+                  $objekintel[$i]->setCluster($centro);
+          echo "<tr><td>Objek ".($i+1)."</td>";                  
+                  for ($j=0;$j<count($objekintel[$i]->data);$j++)
+                        echo "<td>".$objekintel[$i]->data[$j]."</td>";
+                  
+                  for ($j=0;$j<count($centro);$j++){
+                        if ($j == $objekintel[$i]->getCluster())
+                              echo "<td>X</td>";
+                        else  echo "<td>&nbsp;</td>";
+                  }                  
+                  echo "</tr>";
+            }
+            echo "</table><br><br>";
+
+
+
         //check kesamaan cluster//
         $ketemu = TRUE;
-        $countclustarr = array();
-        for($i=0;$i<count($objekintel);$i++) {
+        for($i=0;$i<count($objekintel);$i++) { 
            if($objekintel[$i]->getCluster() != $objektampung[$i]->getCluster()){
                 $ketemu = FALSE;
                 break;
             }
+        }
+        //end check kesamaan cluster//
+        // START TO CHECK PRUNNING
+        $countclustarr = array();
+        for($i=0;$i<count($objekintel);$i++) { 
             $clustemp = $objekintel[$i]->getCluster();
             if(isset($countclustarr[$clustemp])) {
                 $countclustarr[$clustemp] += 1;
@@ -262,20 +296,27 @@
         }
 
         for($zz=0 ;$zz < count($countclustarr); $zz++){
-            echo "Cluster " . ($zz+1) . " = " . $countclustarr[$zz] . " <br/>"; 
-            if($countclustarr[$zz] < 2){
+          if (isset($countclustarr[$zz])) {
+            $bzzs = $countclustarr[$zz];
+          } else {
+            $bzzs = 0;
+          }
+            // echo "Cluster " . ($zz+1) . " = " . $countclustarr[$zz] . " <br/>"; 
+            echo "Cluster " . ($zz+1) . " = " . $bzzs . " <br/>"; 
+            if($bzzs < 2){
                 $potong = true;
                 $potongidx = $zz;
                 $ketemu = TRUE;
                 break;
             }
         }
-        //end check kesamaan cluster//
+        //END CHECK PRUNNING
         $countiter++;   
+        echo "</div>";
     }
-
+    echo "<div style='width:500px;float:left;clear:left;'>";
     if($potong){
-        echo "<h3>KEPOTONG</h3><br/>";
+        echo "<h3>PRUNING</h3><br/>";
         $newcentros = array(array());
         $count = 0;
         for($i=0; $i<count($centro); $i++){
@@ -285,8 +326,11 @@
             }
         }
     }
+    echo "</div>";
+    echo "<div style='padding-left:50px;width:500px;float:left;'>  ";
+    echo "</div>";
     $centro = $newcentros;
-
+    echo "<div style='width:500px;float:left;clear:left;'>";
       echo "<table width='500' cellpadding=0 cellspacing=0>
                         <tr><th colspan='100'>ITERASI ".$countiter."</th></tr>
             <tr><th>Objek</th>";
@@ -318,18 +362,15 @@
                     }
                     echo "<br>";
                 }
-
+            echo "</div>";
 
 
       
-      echo "</div>";
+      // echo "</div>";
       // if(isset($_SESSION['objekan']) && isset($_SESSION['centroclus'])) {
       //   echo "<script>alert('dapet sesinya kok')</script>";
       // }
     ?>
-    <input type="button" id="myBtn" onclick="window.open('/nambang/scatter-plot.php')" value="Show Scatter Plot!">
-    
-    <input type="button" id="myBtn" onclick="window.open('/nambang/sil.php')" value="Show Silhouette!">
     
 </body>
 </html>
